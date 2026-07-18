@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>星夜塔罗</title>
+  <style>
+    :root{--background:#fcfaf5;--foreground:#382f35;--card:#fffefb;--card-foreground:#382f35;--muted:#f4eee6;--muted-foreground:#796d72;--border:#e2d8ce;--input:#fffefa;--ring:#76529f;--primary:#5d3b91;--primary-foreground:#fff;--accent:#f1ebf3;--accent-foreground:#44354d;--viz-series-1:#8d62c4;--viz-series-2:#d4a936}
+    html{background:var(--background);min-height:100%}
+    body{margin:0;min-height:100vh;display:grid;place-items:center;font-family:Inter,"PingFang SC","Microsoft YaHei",system-ui,sans-serif;background:radial-gradient(circle at 50% 42%,#ffffff 0,#fcfaf5 66%,#f7f1e9 100%);color:var(--foreground);transition:background .35s ease}
+    body.reading-active{display:block;background:linear-gradient(180deg,#fcfaf5,#fffefb)}
+    main{width:min(1180px,100%);max-width:100%;box-sizing:border-box;margin:0 auto;padding:32px 14px 60px}
+    .hero-cards{height:120px;display:flex;justify-content:center;align-items:center;margin:0 auto 16px;color:#72558b}
+    .hero-cards svg{width:176px;height:112px;overflow:visible}
+    body.reading-active .hero-cards{display:none}
+    button,input{font:inherit}
+    .btn{appearance:none;border:1px solid var(--border);border-radius:9px;padding:9px 14px;background:var(--accent);color:var(--accent-foreground);cursor:pointer;transition:transform .15s ease,filter .15s ease}
+    .btn:hover{filter:brightness(1.12);transform:translateY(-1px)}
+    .btn:disabled{opacity:.42;cursor:default;transform:none}
+    .btn-primary{background:var(--primary);border-color:var(--primary);color:var(--primary-foreground);font-weight:500}
+    .form-label{display:grid;gap:7px;color:var(--muted-foreground)}
+    .form-control{width:100%;border:1px solid var(--border);border-radius:9px;padding:11px 12px;background:var(--input);color:var(--foreground);outline:none}
+    .form-control:focus{box-shadow:0 0 0 2px var(--ring)}
+    .form-control::placeholder{color:#9e8caf}
+  </style>
+</head>
+<body>
+<main>
+  <div class="hero-cards" aria-hidden="true">
+    <svg viewBox="0 0 176 112" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <g transform="translate(16 15) rotate(-9 30 42)"><rect x="2" y="2" width="56" height="84" rx="8"/><path d="M30 21v46M18 44h24"/><path d="M30 27l4 8-4 8-4-8z"/></g>
+      <g transform="translate(60 5)"><rect x="2" y="2" width="56" height="88" rx="8"/><circle cx="30" cy="45" r="14"/><path d="M30 23v7M30 60v7M8 45h7M45 45h7"/><path d="M30 38l3 5 6 2-6 3-3 6-3-6-6-3 6-2z"/></g>
+      <g transform="translate(108 15) rotate(9 30 42)"><rect x="2" y="2" width="56" height="84" rx="8"/><path d="M17 28c7-7 19-7 26 0M17 59c7 7 19 7 26 0"/><path d="M30 34l3 7 7 3-7 3-3 7-3-7-7-3 7-3z"/></g>
+      <path d="M7 19l2 4 4 2-4 2-2 4-2-4-4-2 4-2zM164 13l2 4 4 2-4 2-2 4-2-4-4-2 4-2z"/>
+    </svg>
+  </div>
+<div id="starlit-tarot">
+  <style>
+    #starlit-tarot{color:var(--foreground);font-family:inherit;width:100%;--purple:#35205f;--purple2:#5d3b91;--gold:#f1c65a;}
+    #starlit-tarot *{box-sizing:border-box}
+    #starlit-tarot .shell{display:grid;gap:18px;width:100%;min-width:0;background:linear-gradient(160deg,color-mix(in srgb,var(--purple) 8%,var(--background)),var(--background) 65%);border-radius:18px;padding:clamp(14px,3vw,26px)}
+    #starlit-tarot .question-grid{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:end}
+    #starlit-tarot .spread-block{display:grid;gap:9px;width:100%;min-width:0}
+    #starlit-tarot .spread-scroller{display:flex;width:100%;min-width:0;max-width:100%;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding:2px 2px 8px;scrollbar-color:#b9a6c8 transparent}
+    #starlit-tarot .spread-option{flex:0 0 126px;min-height:82px;border:1px solid var(--border);border-radius:11px;background:color-mix(in srgb,var(--card) 88%,transparent);color:var(--foreground);padding:9px;display:grid;gap:7px;text-align:left;cursor:pointer}
+    #starlit-tarot .spread-option.selected{border-color:var(--primary);box-shadow:0 0 0 2px color-mix(in srgb,var(--primary) 22%,transparent);background:#f3edf7}
+    #starlit-tarot .spread-option strong{font-weight:500}
+    #starlit-tarot .spread-mini{height:24px;display:flex;justify-content:center;align-items:center;gap:3px}
+    #starlit-tarot .spread-mini i{display:block;width:8px;height:14px;border:1px solid #806493;border-radius:2px;background:#fffaf2;transform:translateY(var(--mini-y,0))}
+    #starlit-tarot .toolbar,#starlit-tarot .actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    #starlit-tarot .number-panel{display:none;grid-template-columns:1fr auto auto;gap:8px;align-items:end}
+    #starlit-tarot .number-panel.show{display:grid}
+    #starlit-tarot .shuffle-scene{display:none;place-items:center;min-height:300px;text-align:center;gap:14px;overflow:hidden}
+    #starlit-tarot .shuffle-scene.show{display:grid}
+    #starlit-tarot .shuffle-deck{position:relative;width:min(680px,100%);height:184px}
+    #starlit-tarot .shuffle-card{position:absolute;left:calc(50% - 48px);top:8px;width:96px;height:166px;border-radius:8px;border:3px solid var(--gold);background:radial-gradient(circle at 50% 50%,var(--purple2),var(--purple) 68%);box-shadow:inset 0 0 0 3px var(--purple),inset 0 0 0 4px var(--gold),0 8px 16px rgba(58,39,76,.16);opacity:0;transition:transform 1.35s cubic-bezier(.2,.8,.2,1),opacity .3s ease}
+    #starlit-tarot .shuffle-card::before{content:'✦';position:absolute;inset:20px;display:grid;place-items:center;color:var(--gold);font-size:28px;border:1px solid var(--gold);border-radius:50%}
+    #starlit-tarot .shuffle-card:nth-child(-n+3){opacity:1}
+    #starlit-tarot .shuffle-card:nth-child(1){animation:shuffleLeft .75s ease-in-out 2}
+    #starlit-tarot .shuffle-card:nth-child(2){animation:shuffleRight .75s ease-in-out .06s 2}
+    #starlit-tarot .shuffle-card:nth-child(3){animation:shuffleCut .75s ease-in-out .12s 2}
+    #starlit-tarot .shuffle-scene.spreading .shuffle-card{opacity:1;animation:none;transform:translateX(calc(var(--s) * 27px)) rotate(calc(var(--s) * 2.2deg))}
+    @keyframes shuffleLeft{0%,100%{transform:translate(0) rotate(0)}48%{transform:translate(-62px,18px) rotate(-12deg)}72%{transform:translate(5px,-4px) rotate(2deg)}}
+    @keyframes shuffleRight{0%,100%{transform:translate(0) rotate(0)}48%{transform:translate(62px,18px) rotate(12deg)}72%{transform:translate(-5px,-4px) rotate(-2deg)}}
+    @keyframes shuffleCut{0%,100%{transform:translate(0) rotate(0)}48%{transform:translate(0,-42px) rotate(3deg)}72%{transform:translate(0,6px)}}
+    #starlit-tarot .status{display:flex;justify-content:space-between;gap:12px;color:var(--muted-foreground);min-height:24px}
+    #starlit-tarot .fan-wrap{display:none;overflow-x:auto;overflow-y:hidden;padding:12px 10px 4px;scrollbar-color:var(--purple2) transparent;overscroll-behavior-inline:contain}
+    #starlit-tarot .fan-wrap.show{display:block}
+    #starlit-tarot .fan{position:relative;height:250px;width:2510px;min-width:2510px;margin:0 auto}
+    #starlit-tarot .fan-card{position:absolute;left:calc(var(--i) * 31px);top:calc(35px + var(--arc));width:96px;height:166px;border:0;padding:0;background:transparent;transform:rotate(var(--rot));transform-origin:50% 160%;transition:transform .2s ease,filter .2s ease,opacity .2s ease;cursor:pointer;filter:drop-shadow(0 5px 5px color-mix(in srgb,var(--foreground) 20%,transparent))}
+    #starlit-tarot .fan-card:hover{transform:rotate(var(--rot)) translateY(-20px);z-index:100!important}
+    #starlit-tarot .fan-card.chosen{opacity:.18;pointer-events:none;transform:rotate(var(--rot)) translateY(14px)}
+    #starlit-tarot .card-back{position:absolute;inset:0;border-radius:8px;border:3px solid var(--gold);background:radial-gradient(circle at 50% 50%,var(--purple2),var(--purple) 68%);box-shadow:inset 0 0 0 3px var(--purple),inset 0 0 0 4px color-mix(in srgb,var(--gold) 75%,transparent);overflow:hidden}
+    #starlit-tarot .card-back::before{content:'✦';position:absolute;inset:18px;display:grid;place-items:center;color:var(--gold);font-size:34px;border:1px solid var(--gold);border-radius:50%;text-shadow:0 0 12px color-mix(in srgb,var(--gold) 70%,transparent)}
+    #starlit-tarot .card-back::after{content:'✧  ·  ✦  ·  ✧';position:absolute;left:0;right:0;top:10px;text-align:center;color:var(--gold);font-size:10px;letter-spacing:2px;box-shadow:0 136px 0 transparent}
+    #starlit-tarot .picked-area{display:none;gap:12px;text-align:center;width:100%;min-width:0;overflow-x:auto;-webkit-overflow-scrolling:touch}
+    #starlit-tarot .picked-area.show{display:grid}
+    #starlit-tarot .picked-row{display:grid;grid-template-columns:repeat(5,132px);grid-auto-rows:236px;justify-content:center;align-items:start;gap:10px;min-height:230px}
+    #starlit-tarot .picked-slot{display:grid;gap:8px;justify-items:center;width:132px;animation:land .45s cubic-bezier(.2,.8,.2,1) both}
+    @keyframes land{from{transform:translateY(-55px) scale(.8);opacity:0}to{transform:translateY(0) scale(1);opacity:1}}
+    #starlit-tarot .flip-card{width:118px;height:204px;perspective:1000px}
+    #starlit-tarot .flip-inner{position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform .85s cubic-bezier(.2,.7,.2,1)}
+    #starlit-tarot .flip-card.revealed .flip-inner{transform:rotateY(180deg)}
+    #starlit-tarot .flip-card.reversed .face-img{transform:rotate(180deg)}
+    #starlit-tarot .flip-front,#starlit-tarot .flip-back{position:absolute;inset:0;backface-visibility:hidden;border-radius:9px;overflow:hidden;filter:drop-shadow(0 8px 9px color-mix(in srgb,var(--foreground) 22%,transparent))}
+    #starlit-tarot .flip-front{transform:rotateY(180deg);background:var(--card);border:2px solid var(--gold)}
+    #starlit-tarot .face-img{width:100%;height:100%;display:block;object-fit:cover}
+    #starlit-tarot .slot-label{color:var(--muted-foreground)}
+    #starlit-tarot .finish-row{display:flex;justify-content:center;gap:8px;flex-wrap:wrap}
+    #starlit-tarot .results{display:none;gap:14px}
+    #starlit-tarot .results.show{display:grid}
+    #starlit-tarot .meaning-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+    #starlit-tarot .meaning{border:1px solid var(--border);background:var(--card);color:var(--card-foreground);border-radius:12px;padding:14px;display:grid;gap:7px}
+    #starlit-tarot .meaning h3,#starlit-tarot .meaning p,#starlit-tarot .reading p{margin:0}
+    #starlit-tarot .reading{border-left:3px solid var(--gold);padding:5px 0 5px 14px;display:grid;gap:8px}
+    #starlit-tarot .ai-panel{display:none;border:1px solid var(--border);border-radius:12px;background:var(--card);padding:14px;gap:10px}
+    #starlit-tarot .ai-panel.show{display:grid}
+    #starlit-tarot .ai-panel h3,#starlit-tarot .ai-panel p{margin:0}
+    #starlit-tarot .ai-prompt{width:100%;min-height:150px;resize:vertical;border:1px solid var(--border);border-radius:9px;background:var(--input);color:var(--foreground);padding:10px;font:inherit}
+    #starlit-tarot .hide{display:none!important}
+    #starlit-tarot .text-small{color:var(--muted-foreground)}
+    @media(max-width:720px){
+      main{padding:18px 10px 44px}
+      #starlit-tarot .question-grid,#starlit-tarot .number-panel{grid-template-columns:1fr}
+      #starlit-tarot .spread-scroller{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));overflow:visible;gap:8px;padding-bottom:2px}
+      #starlit-tarot .spread-option{width:100%;min-width:0;min-height:76px;flex:none}
+      #starlit-tarot .fan{height:220px}
+      #starlit-tarot .picked-row{grid-template-columns:repeat(5,64px);grid-auto-rows:150px;gap:2px;min-width:328px}
+      #starlit-tarot .picked-slot{width:64px}
+      #starlit-tarot .flip-card{width:60px;height:104px}
+      #starlit-tarot .slot-label{font-size:11px;overflow-wrap:anywhere}
+      #starlit-tarot .meaning-grid{grid-template-columns:1fr}
+    }
+    @media(max-width:360px){#starlit-tarot .picked-row{transform:scale(.9);transform-origin:top center;margin-bottom:-10%}}
+  </style>
+
+  <div class="shell">
+    <div id="spread-block" class="spread-block">
+      <span class="form-label">选择牌阵</span>
+      <div id="spread-scroller" class="spread-scroller" aria-label="牌阵选择"></div>
+    </div>
+    <label class="form-label" id="question-label">你想问什么？
+      <div class="question-grid">
+        <input id="question" class="form-control" type="text" placeholder="例如：未来三个月，我和他的关系会怎样？" autocomplete="off">
+        <button id="shuffle" class="btn btn-primary" type="button">洗牌并展开</button>
+      </div>
+    </label>
+
+    <div id="toolbar" class="toolbar hide">
+      <span class="text-small">抽取方式</span>
+      <button id="manual-mode" class="btn btn-primary" type="button" aria-pressed="true">亲手选牌</button>
+      <button id="number-mode" class="btn" type="button" aria-pressed="false">报数字抽牌</button>
+    </div>
+    <div id="number-panel" class="number-panel">
+      <label class="form-label"><span id="number-label">输入不重复的数字（1–78）</span>
+        <input id="numbers" class="form-control" type="text" inputmode="numeric" placeholder="例如：7，21，66">
+      </label>
+      <button id="voice" class="btn" type="button">🎙 说数字</button>
+      <button id="draw-numbers" class="btn btn-primary" type="button">抽取</button>
+    </div>
+    <div id="shuffle-scene" class="shuffle-scene" aria-live="polite">
+      <div class="shuffle-deck" aria-hidden="true">
+        <div class="shuffle-card" style="--s:-5.5"></div><div class="shuffle-card" style="--s:-4.5"></div><div class="shuffle-card" style="--s:-3.5"></div><div class="shuffle-card" style="--s:-2.5"></div><div class="shuffle-card" style="--s:-1.5"></div><div class="shuffle-card" style="--s:-.5"></div><div class="shuffle-card" style="--s:.5"></div><div class="shuffle-card" style="--s:1.5"></div><div class="shuffle-card" style="--s:2.5"></div><div class="shuffle-card" style="--s:3.5"></div><div class="shuffle-card" style="--s:4.5"></div><div class="shuffle-card" style="--s:5.5"></div>
+      </div>
+      <div><strong id="shuffle-title">正在洗牌</strong><div id="shuffle-note" class="text-small">在心里默念你的问题</div></div>
+    </div>
+    <div class="status" aria-live="polite"><span id="status">写下问题，让牌面回应你。</span><span id="counter"></span></div>
+
+    <div id="fan-wrap" class="fan-wrap" aria-label="横向移动查看全部78张塔罗牌">
+      <div id="fan" class="fan"></div>
+    </div>
+
+    <section id="picked-area" class="picked-area" aria-live="polite">
+      <div id="picked-row" class="picked-row"></div>
+      <div id="finish-row" class="finish-row">
+        <button id="finish" class="btn btn-primary" type="button" disabled>完成抽牌并翻开</button>
+        <button id="undo" class="btn" type="button" disabled>撤回上一张</button>
+      </div>
+    </section>
+
+    <section id="results" class="results">
+      <div id="meaning-grid" class="meaning-grid"></div>
+      <div id="reading" class="reading"></div>
+      <div id="ai-panel" class="ai-panel" aria-live="polite">
+        <h3>交给 AI 深度解读</h3>
+        <p class="text-small">独立网页无法直接调用 ChatGPT。下面已经整理好你的问题、牌阵和牌面。</p>
+        <textarea id="ai-prompt" class="ai-prompt" readonly></textarea>
+        <div class="actions">
+          <button id="copy-open-ai" class="btn btn-primary" type="button">复制并打开 ChatGPT</button>
+          <button id="close-ai" class="btn" type="button">收起</button>
+        </div>
+        <span id="copy-status" class="text-small"></span>
+      </div>
+      <div class="actions">
+        <button id="deep-read" class="btn btn-primary" type="button">让 AI 结合问题深度解读</button>
+        <button id="restart" class="btn" type="button">重新占卜</button>
+      </div>
+    </section>
+  </div>
+
+  <script>
+  (function(){
+    const root=document.getElementById('starlit-tarot');
+    const $=id=>root.querySelector('#'+id);
+    const base='https://cdn.jsdelivr.net/npm/tarot-card-img@0.1.0/';
+    const majorNames=['愚人','魔术师','女祭司','皇后','皇帝','教皇','恋人','战车','力量','隐者','命运之轮','正义','倒吊人','死神','节制','恶魔','高塔','星星','月亮','太阳','审判','世界'];
+    const majorUp=['新的旅程、自由、冒险','主动创造、资源齐备、行动力','直觉、静观、隐藏的信息','丰盛、滋养、创造力','秩序、边界、掌控','传统、承诺、指导','连结、选择、价值一致','意志、推进、掌握方向','温柔的勇气、自信、耐心','独处思考、寻找答案、内省','转机、周期变化、机缘','公平、因果、清晰判断','暂停、换个角度、放下','结束、转化、更新','调和、疗愈、循序渐进','欲望、束缚、执着','突变、真相击穿、重建','希望、疗愈、真实愿景','潜意识、迷雾、敏感','清晰、活力、喜悦','觉醒、召唤、重新评估','完成、圆满、进入新阶段'];
+    const majorRev=['鲁莽、迟疑、方向未明','操控、能力受阻、计划落空','忽略直觉、秘密浮现、内在混乱','过度付出、依赖、创造受阻','僵化、控制欲、权威冲突','打破惯例、价值观冲突、自主选择','失衡、误解、艰难抉择','失控、阻滞、用力过猛','自我怀疑、压抑、能量不足','封闭、孤立、逃避面对','延误、重复模式、抗拒变化','偏见、失衡、责任回避','僵持、无谓牺牲、拖延','难以放手、停滞、害怕改变','失衡、极端、节奏混乱','松绑、看清依赖、夺回选择','抗拒崩塌、余震、危机延迟','失望、信心不足、目标遥远','迷雾渐散、恐惧被看见、误会','短暂阴霾、过度乐观、快乐延迟','自责、拒绝回应、迟迟未决','尚未收尾、缺少闭环、进度延迟'];
+    const suits=[['权杖','wands','w','行动、热情与创造'],['圣杯','cups','c','情感、关系与直觉'],['宝剑','swords','s','思考、沟通与冲突'],['星币','pentacles','p','现实、金钱与长期建设']];
+    const ranks=[['王牌','1','新的种子与机会','动力分散或机会延迟'],['二','2','平衡两端与做出选择','犹豫、失衡或信息不足'],['三','3','扩展、合作与初见成果','协作不畅或进展受阻'],['四','4','稳定、休整与建立基础','停滞、封闭或基础松动'],['五','5','摩擦、变化与现实考验','冲突缓和或旧问题残留'],['六','6','调整后前行、支持与改善','进展迟缓或付出失衡'],['七','7','评估局势、坚持与策略','动摇、疲惫或判断偏差'],['八','8','加速、专注与持续推进','阻塞、重复劳动或失去节奏'],['九','9','接近完成、韧性与自我保护','耗竭、防备过强或临门迟疑'],['十','10','结果显现、阶段完成与责任','负担过重、结局延迟或需要放下'],['侍从','p','消息、好奇与学习起点','不成熟、消息延误或缺乏准备'],['骑士','n','追求目标、移动与执行','冲动、方向摇摆或行动停顿'],['王后','q','成熟的内在力量与照料','情绪内耗、边界模糊或自我忽视'],['国王','k','掌控局面、经验与担当','强势、失衡或责任运用不当']];
+    const cards=majorNames.map((name,i)=>({name:name,image:base+'major/'+i+'m.jpg',up:majorUp[i],rev:majorRev[i],group:'大阿卡那'}));
+    suits.forEach(s=>ranks.forEach(r=>cards.push({name:s[0]+r[0],image:base+s[1]+'/'+r[1]+s[2]+'.jpg',up:s[3]+'；'+r[2],rev:s[3]+'；'+r[3],group:s[0]})));
+    const spreads=[
+      {id:'yesno',name:'Yes or No',note:'1张 · 快速判断',pos:['答案'],desc:['问题当前最直接的倾向'],layout:[[3,1]],reverse:false},
+      {id:'gainloss',name:'得与失',note:'2张 · 权衡取舍',pos:['我将失去什么','我将得到什么'],desc:['选择所需要付出的代价','选择可能带来的收获'],layout:[[2,1],[4,1]]},
+      {id:'timeline',name:'时间之流',note:'3张 · 发展趋势',pos:['过去','现在','未来'],desc:['形成局面的过去因素','正在发生的核心状况','沿当前能量延伸的方向'],layout:[[2,1],[3,1],[4,1]]},
+      {id:'triangle',name:'圣三角',note:'3张 · 原因与结果',pos:['现状','原因','结果'],desc:['问题当前呈现的状态','促成现状的深层原因','继续发展时的可能结果'],layout:[[3,2],[2,1],[4,1]]},
+      {id:'explore',name:'自我探索',note:'4张 · 看见内心',pos:['当前状态','外在表现','内在渴望','潜意识'],desc:['你此刻的真实状态','你向外界呈现的自己','内心真正期待的方向','尚未被完全觉察的动机'],layout:[[3,2],[2,2],[4,2],[3,1]]},
+      {id:'mindbody',name:'身心灵',note:'3张 · 整体平衡',pos:['身体','心','灵'],desc:['现实行动与身体状态','情绪、欲望与关系感受','精神方向与成长召唤'],layout:[[2,2],[4,2],[3,1]]},
+      {id:'jung',name:'荣格原型',note:'5张 · 人格结构',pos:['自我／人格面具','阴暗自我','阿尼玛／阿尼姆斯','智慧老人','自性'],desc:['你认同并展示的自我','被压抑或回避的部分','内在异性原型与潜意识桥梁','经验与智慧的指引','更完整真实的核心自我'],layout:[[2,1],[4,1],[4,2],[2,2],[3,2]]},
+      {id:'choice',name:'二选一',note:'5张 · A/B抉择',pos:['现状','选择A的现状','选择A的影响','选择B的现状','选择B的影响'],desc:['你此刻面对选择的立足点','A路径当前具备的条件','A路径可能带来的结果','B路径当前具备的条件','B路径可能带来的结果'],layout:[[3,3],[2,2],[2,1],[4,2],[4,1]]},
+      {id:'talent',name:'内在天赋',note:'6张 · 潜能发展',pos:['我与生俱来的天赋','如何使用天赋','天赋的环境效应','如何发挥长处','如何应对短板','综合发展建议'],desc:['最自然的能力底色','适合你的运用方式','天赋对周围环境的影响','把优势转为成果的方法','需要补足或管理的部分','整体成长方向'],layout:[[3,3],[2,3],[4,3],[2,2],[4,2],[3,1]]},
+      {id:'free',name:'无牌阵',note:'3张 · 自由信息',pos:['第一则信息','第二则信息','第三则信息'],desc:['最先需要看见的讯息','对第一张牌的补充或转折','当前最值得带走的提示'],layout:[[2,1],[3,1],[4,1]]},
+      {id:'month',name:'月运势',note:'4张 · 本月走向',pos:['月初','月中','月末','整体建议'],desc:['本月开启时的能量','月中变化与重点','临近月末的走向','贯穿整月的行动建议'],layout:[[2,2],[3,2],[4,2],[3,1]]},
+      {id:'career-pyramid',name:'事业金字塔',note:'4张 · 职业发展',pos:['现状','建议／解决方法','阻碍','未来发展'],desc:['目前的事业位置','值得采取的行动','主要限制与挑战','当前路径的后续趋势'],layout:[[3,1],[2,2],[3,2],[4,2]]},
+      {id:'love-pyramid',name:'爱情金字塔',note:'4张 · 关系发展',pos:['我的想法','对方的想法','关系现状','未来发展'],desc:['你对关系的真实看法','对方当前呈现的态度','双方互动的核心状态','关系继续推进的可能方向'],layout:[[2,2],[4,2],[3,2],[3,1]]},
+      {id:'lover-cross',name:'恋人十字',note:'5张 · 双方关系',pos:['你的想法状态','对方的想法状态','过去','关系现状','未来发展'],desc:['你在关系中的心理位置','对方在关系中的心理位置','影响关系的过往因素','双方目前的连接状态','关系的可能走向'],layout:[[3,1],[3,3],[2,2],[3,2],[4,2]]},
+      {id:'career',name:'事业牌阵',note:'6张 · 工作全景',pos:['这份工作适合吗','发展空间','人际关系','领导看法','注意事项','其他机会'],desc:['岗位与你当前需求的匹配度','能获得的成长与上升空间','同事合作与职场氛围','上级对你的态度或期待','需要特别留意的风险','外部或后续的职业机会'],layout:[[2,1],[3,1],[4,1],[2,2],[3,2],[4,2]]},
+      {id:'venus',name:'爱情维纳斯',note:'8张 · 深度关系',pos:['你的真实想法','对方的真实想法','关系对你的影响','关系对对方的影响','感情阻碍','感情最终走向','你未来的心态','对方未来的心态'],desc:['你对这段关系的深层态度','对方在关系中的真实倾向','这段关系如何改变你','这段关系如何改变对方','双方之间最需要处理的问题','当前能量下的关系终点','你之后会如何看待这段关系','对方之后会如何看待这段关系'],layout:[[2,2],[4,2],[3,1],[3,2],[3,3],[3,4],[2,3],[4,3]]},
+      {id:'inspiration',name:'灵感对应',note:'8张 · 双方映照',pos:['你的想法①','对方的想法②','你的想法③','对方的想法④','你的想法⑤','对方的想法⑥','未来发展','建议'],desc:['你已经意识到的态度','对方已经呈现的态度','你的潜在期待','对方的潜在期待','你更深层的真实想法','对方更深层的真实想法','双方互动的后续方向','改善局面的行动提示'],layout:[[2,1],[2,3],[3,1],[3,3],[4,1],[4,3],[5,2],[1,2]]}
+    ];
+    let deck=[],selected=[],question='',mode='manual',revealed=false,shuffling=false,currentSpread=spreads[2];
+    function positions(){return currentSpread.pos.map((name,i)=>[name,currentSpread.desc[i]])}
+    function shuffleArray(list){const a=list.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a}
+    function backMarkup(){return '<div class="card-back"></div>'}
+    function renderSpreadPicker(){const box=$('spread-scroller');box.innerHTML='';spreads.forEach(sp=>{const b=document.createElement('button');b.type='button';b.className='spread-option'+(sp.id===currentSpread.id?' selected':'');b.setAttribute('aria-pressed',String(sp.id===currentSpread.id));const bars=sp.pos.slice(0,6).map((_,i)=>'<i style="--mini-y:'+(i%2?3:0)+'px"></i>').join('');b.innerHTML='<div class="spread-mini">'+bars+'</div><strong>'+sp.name+'</strong><span class="text-small">'+sp.note+'</span>';b.addEventListener('click',()=>{currentSpread=sp;renderSpreadPicker();$('status').textContent='已选择「'+sp.name+'」，需要抽 '+sp.pos.length+' 张牌。'});box.appendChild(b)})}
+    function start(){question=$('question').value.trim();if(!question){$('status').textContent='先写下问题，我才知道要替你看向哪里。';$('question').focus();return}if(shuffling)return;shuffling=true;document.body.classList.add('reading-active');deck=shuffleArray(cards);selected=[];revealed=false;$('spread-block').classList.add('hide');$('question-label').classList.add('hide');$('results').classList.remove('show');$('picked-area').classList.remove('show');$('fan-wrap').classList.remove('show');$('toolbar').classList.add('hide');$('shuffle-scene').classList.remove('spreading');$('shuffle-scene').classList.add('show');$('shuffle-title').textContent='正在洗牌';$('shuffle-note').textContent='在心里默念你的问题';$('status').textContent='让问题停留在心里，牌正在重新排列。';$('counter').textContent='';setTimeout(beginSpread,1500);setTimeout(beginDraw,3000)}
+    function beginSpread(){$('shuffle-scene').classList.add('spreading');$('shuffle-title').textContent='正在铺开牌面';$('shuffle-note').textContent='跟随第一眼的直觉'}
+    function beginDraw(){shuffling=false;$('shuffle-scene').classList.remove('show','spreading');$('picked-row').innerHTML='';$('picked-area').classList.add('show');$('fan-wrap').classList.add('show');$('toolbar').classList.remove('hide');$('finish-row').classList.remove('hide');renderFan();setMode('manual');updateState();setTimeout(()=>{$('fan-wrap').scrollLeft=($('fan').scrollWidth-$('fan-wrap').clientWidth)/2},80)}
+    function renderFan(){const fan=$('fan');fan.innerHTML='';deck.forEach((card,i)=>{const t=(i-38.5)/38.5;const b=document.createElement('button');b.type='button';b.className='fan-card';b.style.setProperty('--i',i);b.style.setProperty('--rot',(t*13)+'deg');b.style.setProperty('--arc',(Math.abs(t)*34)+'px');b.style.zIndex=String(i);b.setAttribute('aria-label','牌序第 '+(i+1)+' 张');b.innerHTML=backMarkup();b.addEventListener('click',()=>pick(i));fan.appendChild(b)})}
+    function setMode(next){const need=currentSpread.pos.length;mode=next;$('manual-mode').classList.toggle('btn-primary',next==='manual');$('number-mode').classList.toggle('btn-primary',next==='number');$('manual-mode').setAttribute('aria-pressed',String(next==='manual'));$('number-mode').setAttribute('aria-pressed',String(next==='number'));$('number-panel').classList.toggle('show',next==='number');$('number-label').textContent='输入 '+need+' 个不重复的数字（1–78）';$('numbers').placeholder=need<=3?'例如：7，21，66':'例如：3，8，17…';$('status').textContent=next==='manual'?'「'+currentSpread.name+'」需要 '+need+' 张牌。左右移动牌阵，凭第一感觉抽取。':'输入或说出 '+need+' 个数字，我会按洗牌后的顺序抽取。'}
+    function pick(index){const need=currentSpread.pos.length;if(mode!=='manual'||selected.length>=need||selected.some(p=>p.index===index))return;selected.push({index:index,reversed:currentSpread.reverse===false?false:Math.random()<.32});renderPicked();updateState()}
+    function renderPicked(){const pos=positions();root.querySelectorAll('.fan-card').forEach((b,i)=>b.classList.toggle('chosen',selected.some(p=>p.index===i)));const row=$('picked-row');row.innerHTML='';selected.forEach((p,i)=>{const slot=document.createElement('div');const xy=currentSpread.layout[i]||[i%5+1,Math.floor(i/5)+1];slot.className='picked-slot';slot.style.gridColumn=String(xy[0]);slot.style.gridRow=String(xy[1]);slot.innerHTML='<div class="flip-card'+(p.reversed?' reversed':'')+'"><div class="flip-inner"><div class="flip-back">'+backMarkup()+'</div><div class="flip-front"><img class="face-img" src="'+deck[p.index].image+'" alt="'+deck[p.index].name+'"></div></div></div><div class="slot-label text-small">'+(i+1)+' · '+pos[i][0]+'</div>';row.appendChild(slot)})}
+    function updateState(){const need=currentSpread.pos.length;$('counter').textContent='已抽 '+selected.length+' / '+need;$('finish').disabled=selected.length!==need;$('undo').disabled=selected.length===0;$('status').textContent=selected.length<need?'保持牌背朝上，再选 '+(need-selected.length)+' 张。':need+' 张牌已抽好。准备好后，一起翻开。'}
+    function undo(){if(revealed||!selected.length)return;selected.pop();renderPicked();updateState()}
+    function drawNumbers(){const need=currentSpread.pos.length;const nums=($('numbers').value.match(/\d+/g)||[]).map(Number);if(nums.length!==need||nums.some(n=>n<1||n>78)||new Set(nums).size!==need){$('status').textContent='请给我 '+need+' 个不重复的数字，每个都在 1 到 78 之间。';return}selected=nums.map(n=>({index:n-1,reversed:currentSpread.reverse===false?false:Math.random()<.32}));renderPicked();updateState()}
+    function finish(){const need=currentSpread.pos.length;if(selected.length!==need)return;revealed=true;$('fan-wrap').classList.remove('show');$('toolbar').classList.add('hide');$('number-panel').classList.remove('show');$('finish-row').classList.add('hide');$('question-label').classList.add('hide');$('picked-area').classList.add('show');$('picked-row').querySelectorAll('.flip-card').forEach((el,i)=>setTimeout(()=>el.classList.add('revealed'),120+i*150));setTimeout(showResults,500+need*150);$('status').textContent='牌面正在翻开……';$('counter').textContent=''}
+    function showResults(){const pos=positions(),grid=$('meaning-grid');grid.innerHTML='';selected.forEach((p,i)=>{const c=deck[p.index],cardMeaning=p.reversed?c.rev:c.up;const box=document.createElement('article');box.className='meaning';box.innerHTML='<div class="text-small">'+pos[i][0]+' · '+(p.reversed?'逆位':'正位')+'</div><h3>'+c.name+'</h3><p>'+cardMeaning+'</p><p class="text-small">'+pos[i][1]+'</p>';grid.appendChild(box)});const lens=questionLens(question);const lines=selected.map((p,i)=>'在「'+pos[i][0]+'」的位置，'+deck[p.index].name+(p.reversed?'逆位':'正位')+'把重点落在'+meaning(deck[p.index],p)).join('；');const last=selected.length-1;const finalCard=deck[selected[last].index];$('reading').innerHTML='<p class="text-small">基础牌意梳理 · 本地生成</p><p><strong>'+currentSpread.name+' · 关于「'+escapeHtml(question)+'」</strong></p><p>'+lens.opening+'</p><p>'+lines+'。</p><p>'+lens.bridge+' 当前可参考「'+pos[last][0]+'」的 '+finalCard.name+'：'+meaning(finalCard,selected[last])+'。'+lens.action+'</p>';$('results').classList.add('show');$('status').textContent=currentSpread.pos.length+' 张牌已经翻开。';$('results').scrollIntoView({behavior:'smooth',block:'start'})}
+    function meaning(c,p){return p.reversed?c.rev:c.up}
+    function questionLens(q){const text=q.toLowerCase();if(/感情|爱情|恋爱|关系|他|她|复合|暧昧|喜欢|对象|男友|女友|伴侣/.test(text))return{opening:'这次解读会把牌面放进双方的互动、情绪投入与关系边界中观察。牌所呈现的是这段关系当前的连接方式，以及你能主动调整的部分。',bridge:'把几张牌连起来看，关系的走向取决于双方是否愿意回应同一个核心问题。',action:'留意真实行动与沟通的一致性，给自己设定一条清楚的情感边界。'};if(/工作|事业|求职|面试|offer|职业|升职|同事|老板|公司|辞职/.test(text))return{opening:'这次解读聚焦现实条件、职业选择与行动节奏。牌面会分别对应你已有的资源、眼前的限制和下一步可以推动的事情。',bridge:'这组牌的重点落在能力如何转化为实际进展，以及外部环境能否提供相应空间。',action:'把建议收束成一项本周可以完成的职业行动，并为关键结果设定明确期限。'};if(/钱|财|收入|工资|投资|股票|房|押金|租金|生意|订单/.test(text))return{opening:'这次解读会优先关注现金流、风险、回报和现实可执行性。牌面反映的是当前决策结构，适合用来检查遗漏与情绪性判断。',bridge:'几张牌共同提示你区分已经确定的数字、仍需验证的信息和愿意承担的风险。',action:'在行动前写下可承受损失、等待期限和退出条件，让决定有清晰边界。'};if(/会不会|能不能|是否|要不要|选择|还是|a|b/.test(text))return{opening:'你的问题带有明确的选择倾向，这次解读会比较推动力、阻力和可能代价。牌面提供的是当前条件下更占优势的方向。',bridge:'判断时要同时看牌面的支持程度与实现它需要付出的成本。',action:'优先选择能保留后续调整空间、并与你长期目标一致的方案。'};if(/多久|什么时候|未来|接下来|本月|今年|时间/.test(text))return{opening:'这次解读聚焦事情如何随时间展开。塔罗更擅长呈现阶段与节奏，具体日期仍会受到现实行动和他人选择影响。',bridge:'牌面显示的发展速度取决于阻力是否被处理，以及关键行动何时发生。',action:'把未来拆成近期、中期两个观察点，依据实际信号再调整计划。'};return{opening:'这次解读会紧扣你的原问题，观察现状、潜在阻力和可行动的方向。',bridge:'几张牌之间的呼应比单张牌的吉凶更重要，它们共同描述了局面如何运作。',action:'选取牌面中最能落地的一条提示，在接下来七天内验证它。'}}
+    function escapeHtml(s){return s.replace(/[&<>'"]/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[ch]))}
+    function voice(){const need=currentSpread.pos.length;const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){$('status').textContent='当前浏览器没有语音识别功能，可以直接输入数字。';return}const r=new SR();r.lang='zh-CN';r.interimResults=false;$('status').textContent='我在听，慢慢说 '+need+' 个数字。';r.onresult=e=>{$('numbers').value=e.results[0][0].transcript;$('status').textContent='听到了：'+e.results[0][0].transcript};r.onerror=()=>{$('status').textContent='这次没听清，再说一次或直接输入数字。'};r.start()}
+    function buildAiPrompt(){const pos=positions();const line=selected.map((p,i)=>pos[i][0]+'：'+deck[p.index].name+'（'+(p.reversed?'逆位':'正位')+'）').join('；');return '请真正结合我的具体问题解读「'+currentSpread.name+'」塔罗牌阵。\n\n我的原问题：'+question+'\n\n牌面：'+line+'。\n\n请理解问题中的具体人物、事件、时间和我真正想确认的核心，逐张解释每张牌在这个问题里指向什么，再分析牌与牌之间的因果、矛盾与呼应，最后给出针对当前情境的判断和建议。避免复述通用牌意或套用固定模板。'}
+    async function deepRead(){const prompt=buildAiPrompt();if(window.openai&&window.openai.sendFollowUpMessage){await window.openai.sendFollowUpMessage({prompt:prompt,title:'结合具体问题解读「'+currentSpread.name+'」'});return}$('ai-prompt').value=prompt;$('copy-status').textContent='';$('ai-panel').classList.add('show');$('ai-panel').scrollIntoView({behavior:'smooth',block:'center'})}
+    async function copyOpenAi(){const prompt=$('ai-prompt').value;let copied=false;try{await navigator.clipboard.writeText(prompt);copied=true}catch(e){$('ai-prompt').focus();$('ai-prompt').select();copied=document.execCommand('copy')}$('copy-status').textContent=copied?'提示词已复制，正在打开 ChatGPT。':'请手动复制上方提示词。';window.open('https://chatgpt.com/','_blank','noopener,noreferrer')}
+    function restart(){selected=[];deck=[];revealed=false;document.body.classList.remove('reading-active');$('ai-panel').classList.remove('show');$('spread-block').classList.remove('hide');$('fan-wrap').classList.remove('show');$('picked-area').classList.remove('show');$('results').classList.remove('show');$('toolbar').classList.add('hide');$('number-panel').classList.remove('show');$('question-label').classList.remove('hide');$('picked-row').innerHTML='';$('counter').textContent='';$('status').textContent='选择牌阵，写下新的问题。';$('question').focus()}
+    $('shuffle').addEventListener('click',start);$('question').addEventListener('keydown',e=>{if(e.key==='Enter')start()});$('manual-mode').addEventListener('click',()=>setMode('manual'));$('number-mode').addEventListener('click',()=>setMode('number'));$('draw-numbers').addEventListener('click',drawNumbers);$('voice').addEventListener('click',voice);$('undo').addEventListener('click',undo);$('finish').addEventListener('click',finish);$('deep-read').addEventListener('click',deepRead);$('copy-open-ai').addEventListener('click',copyOpenAi);$('close-ai').addEventListener('click',()=>$('ai-panel').classList.remove('show'));$('restart').addEventListener('click',restart);renderSpreadPicker();
+  })();
+  </script>
+</div>
+</main>
+</body>
+</html>
