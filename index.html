@@ -41,6 +41,8 @@
     #starlit-tarot .shell{display:grid;gap:18px;width:100%;min-width:0;background:linear-gradient(160deg,color-mix(in srgb,var(--purple) 8%,var(--background)),var(--background) 65%);border-radius:18px;padding:clamp(14px,3vw,26px)}
     #starlit-tarot .question-grid{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:end}
     #starlit-tarot .spread-block{display:grid;gap:9px;width:100%;min-width:0}
+    #starlit-tarot .spread-toggle{display:none;width:100%;align-items:center;justify-content:space-between;text-align:left;background:var(--card);border:1px solid var(--border);border-radius:11px;padding:11px 13px;color:var(--foreground);cursor:pointer}
+    #starlit-tarot .spread-toggle-icon{color:var(--purple2);transition:transform .2s ease}
     #starlit-tarot .spread-scroller{display:flex;width:100%;min-width:0;max-width:100%;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding:2px 2px 8px;scrollbar-color:#b9a6c8 transparent}
     #starlit-tarot .spread-option{flex:0 0 126px;min-height:82px;border:1px solid var(--border);border-radius:11px;background:color-mix(in srgb,var(--card) 88%,transparent);color:var(--foreground);padding:9px;display:grid;gap:7px;text-align:left;cursor:pointer}
     #starlit-tarot .spread-option.selected{border-color:var(--primary);box-shadow:0 0 0 2px color-mix(in srgb,var(--primary) 22%,transparent);background:#f3edf7}
@@ -107,7 +109,10 @@
     @media(max-width:720px){
       main{padding:18px 10px 44px}
       #starlit-tarot .question-grid,#starlit-tarot .number-panel{grid-template-columns:1fr}
-      #starlit-tarot .spread-scroller{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));overflow:visible;gap:8px;padding-bottom:2px}
+      #starlit-tarot .spread-toggle{display:flex}
+      #starlit-tarot .spread-block.open .spread-toggle-icon{transform:rotate(180deg)}
+      #starlit-tarot .spread-scroller{display:none;grid-template-columns:repeat(2,minmax(0,1fr));overflow:visible;gap:8px;padding:2px 0}
+      #starlit-tarot .spread-block.open .spread-scroller{display:grid}
       #starlit-tarot .spread-option{width:100%;min-width:0;min-height:76px;flex:none}
       #starlit-tarot .fan{height:220px}
       #starlit-tarot .picked-row{grid-template-columns:repeat(5,64px);grid-auto-rows:150px;gap:2px;min-width:328px}
@@ -125,6 +130,10 @@
   <div class="shell">
     <div id="spread-block" class="spread-block">
       <span class="form-label">选择牌阵</span>
+      <button id="spread-toggle" class="spread-toggle" type="button" aria-expanded="false" aria-controls="spread-scroller">
+        <span><strong id="spread-toggle-name">时间之流</strong><span id="spread-toggle-note" class="text-small"> · 3张 · 发展趋势</span></span>
+        <span class="spread-toggle-icon" aria-hidden="true">⌄</span>
+      </button>
       <div id="spread-scroller" class="spread-scroller" aria-label="牌阵选择"></div>
     </div>
     <label class="form-label" id="question-label">你想问什么？
@@ -220,7 +229,7 @@
     function positions(){return currentSpread.pos.map((name,i)=>[name,currentSpread.desc[i]])}
     function shuffleArray(list){const a=list.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a}
     function backMarkup(){return '<div class="card-back"></div>'}
-    function renderSpreadPicker(){const box=$('spread-scroller');box.innerHTML='';spreads.forEach(sp=>{const b=document.createElement('button');b.type='button';b.className='spread-option'+(sp.id===currentSpread.id?' selected':'');b.setAttribute('aria-pressed',String(sp.id===currentSpread.id));const bars=sp.pos.slice(0,6).map((_,i)=>'<i style="--mini-y:'+(i%2?3:0)+'px"></i>').join('');b.innerHTML='<div class="spread-mini">'+bars+'</div><strong>'+sp.name+'</strong><span class="text-small">'+sp.note+'</span>';b.addEventListener('click',()=>{currentSpread=sp;renderSpreadPicker();$('status').textContent='已选择「'+sp.name+'」，需要抽 '+sp.pos.length+' 张牌。'});box.appendChild(b)})}
+    function renderSpreadPicker(){const box=$('spread-scroller');$('spread-toggle-name').textContent=currentSpread.name;$('spread-toggle-note').textContent=' · '+currentSpread.note;box.innerHTML='';spreads.forEach(sp=>{const b=document.createElement('button');b.type='button';b.className='spread-option'+(sp.id===currentSpread.id?' selected':'');b.setAttribute('aria-pressed',String(sp.id===currentSpread.id));const bars=sp.pos.slice(0,6).map((_,i)=>'<i style="--mini-y:'+(i%2?3:0)+'px"></i>').join('');b.innerHTML='<div class="spread-mini">'+bars+'</div><strong>'+sp.name+'</strong><span class="text-small">'+sp.note+'</span>';b.addEventListener('click',()=>{currentSpread=sp;$('spread-block').classList.remove('open');$('spread-toggle').setAttribute('aria-expanded','false');renderSpreadPicker();$('status').textContent='已选择「'+sp.name+'」，需要抽 '+sp.pos.length+' 张牌。'});box.appendChild(b)})}
     function start(){question=$('question').value.trim();if(!question){$('status').textContent='先写下问题，我才知道要替你看向哪里。';$('question').focus();return}if(shuffling)return;shuffling=true;document.body.classList.add('reading-active');deck=shuffleArray(cards);selected=[];revealed=false;$('spread-block').classList.add('hide');$('question-label').classList.add('hide');$('results').classList.remove('show');$('picked-area').classList.remove('show');$('fan-wrap').classList.remove('show');$('toolbar').classList.add('hide');$('shuffle-scene').classList.remove('spreading');$('shuffle-scene').classList.add('show');$('shuffle-title').textContent='正在洗牌';$('shuffle-note').textContent='在心里默念你的问题';$('status').textContent='让问题停留在心里，牌正在重新排列。';$('counter').textContent='';setTimeout(beginSpread,1500);setTimeout(beginDraw,3000)}
     function beginSpread(){$('shuffle-scene').classList.add('spreading');$('shuffle-title').textContent='正在铺开牌面';$('shuffle-note').textContent='跟随第一眼的直觉'}
     function beginDraw(){shuffling=false;$('shuffle-scene').classList.remove('show','spreading');$('picked-area').classList.add('show');$('fan-wrap').classList.add('show');$('toolbar').classList.remove('hide');$('finish-row').classList.remove('hide');renderFan();renderPicked();setMode('manual');updateState();setTimeout(()=>{$('fan-wrap').scrollLeft=($('fan').scrollWidth-$('fan-wrap').clientWidth)/2},80)}
@@ -241,7 +250,7 @@
     async function deepRead(){const prompt=buildAiPrompt();if(window.openai&&window.openai.sendFollowUpMessage){await window.openai.sendFollowUpMessage({prompt:prompt,title:'结合具体问题解读「'+currentSpread.name+'」'});return}$('ai-prompt').value=prompt;$('copy-status').textContent='';$('ai-panel').classList.add('show');$('ai-panel').scrollIntoView({behavior:'smooth',block:'center'})}
     async function copyOpenAi(){const prompt=$('ai-prompt').value;let copied=false;try{await navigator.clipboard.writeText(prompt);copied=true}catch(e){$('ai-prompt').focus();$('ai-prompt').select();copied=document.execCommand('copy')}$('copy-status').textContent=copied?'提示词已复制，正在打开 ChatGPT。':'请手动复制上方提示词。';window.open('https://chatgpt.com/','_blank','noopener,noreferrer')}
     function restart(){selected=[];deck=[];revealed=false;document.body.classList.remove('reading-active');$('ai-panel').classList.remove('show');$('spread-block').classList.remove('hide');$('fan-wrap').classList.remove('show');$('picked-area').classList.remove('show');$('results').classList.remove('show');$('toolbar').classList.add('hide');$('number-panel').classList.remove('show');$('question-label').classList.remove('hide');$('picked-row').innerHTML='';$('counter').textContent='';$('status').textContent='选择牌阵，写下新的问题。';$('question').focus()}
-    $('shuffle').addEventListener('click',start);$('question').addEventListener('keydown',e=>{if(e.key==='Enter')start()});$('manual-mode').addEventListener('click',()=>setMode('manual'));$('number-mode').addEventListener('click',()=>setMode('number'));$('draw-numbers').addEventListener('click',drawNumbers);$('voice').addEventListener('click',voice);$('undo').addEventListener('click',undo);$('finish').addEventListener('click',finish);$('deep-read').addEventListener('click',deepRead);$('copy-open-ai').addEventListener('click',copyOpenAi);$('close-ai').addEventListener('click',()=>$('ai-panel').classList.remove('show'));$('restart').addEventListener('click',restart);renderSpreadPicker();
+    $('spread-toggle').addEventListener('click',()=>{const open=$('spread-block').classList.toggle('open');$('spread-toggle').setAttribute('aria-expanded',String(open))});$('shuffle').addEventListener('click',start);$('question').addEventListener('keydown',e=>{if(e.key==='Enter')start()});$('manual-mode').addEventListener('click',()=>setMode('manual'));$('number-mode').addEventListener('click',()=>setMode('number'));$('draw-numbers').addEventListener('click',drawNumbers);$('voice').addEventListener('click',voice);$('undo').addEventListener('click',undo);$('finish').addEventListener('click',finish);$('deep-read').addEventListener('click',deepRead);$('copy-open-ai').addEventListener('click',copyOpenAi);$('close-ai').addEventListener('click',()=>$('ai-panel').classList.remove('show'));$('restart').addEventListener('click',restart);renderSpreadPicker();
   })();
   </script>
 </div>
