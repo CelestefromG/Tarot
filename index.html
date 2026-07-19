@@ -226,6 +226,7 @@
     const cards=majorNames.map((name,i)=>({name:name,image:base+'major/'+i+'m.jpg',up:majorUp[i],rev:majorRev[i],group:'大阿卡那'}));
     suits.forEach(s=>ranks.forEach(r=>cards.push({name:s[0]+r[0],image:base+s[1]+'/'+r[1]+s[2]+'.jpg',up:s[3]+'；'+r[2],rev:s[3]+'；'+r[3],group:s[0]})));
     const spreads=[
+      {id:'free',name:'无牌阵',note:'3张 · 自由抽取',pos:['第一张','第二张','第三张'],desc:['最先被抽出的信息','随后出现的补充信息','最后形成的整体提示'],layout:[[2,1],[3,1],[4,1]]},
       {id:'yesno',name:'Yes or No',note:'1张 · 快速判断',pos:['答案'],desc:['问题当前最直接的倾向'],layout:[[3,1]],reverse:false},
       {id:'gainloss',name:'得与失',note:'2张 · 权衡取舍',pos:['我将失去什么','我将得到什么'],desc:['选择所需要付出的代价','选择可能带来的收获'],layout:[[2,1],[4,1]]},
       {id:'timeline',name:'时间之流',note:'3张 · 发展趋势',pos:['过去','现在','未来'],desc:['形成局面的过去因素','正在发生的核心状况','沿当前能量延伸的方向'],layout:[[2,1],[3,1],[4,1]]},
@@ -243,7 +244,7 @@
       {id:'venus',name:'爱情维纳斯',note:'8张 · 深度关系',pos:['你的真实想法','对方的真实想法','关系对你的影响','关系对对方的影响','感情阻碍','感情最终走向','你未来的心态','对方未来的心态'],desc:['你对这段关系的深层态度','对方在关系中的真实倾向','这段关系如何改变你','这段关系如何改变对方','双方之间最需要处理的问题','当前能量下的关系终点','你之后会如何看待这段关系','对方之后会如何看待这段关系'],layout:[[2,2],[4,2],[3,1],[3,2],[3,3],[3,4],[2,3],[4,3]]},
       {id:'inspiration',name:'灵感对应',note:'8张 · 双方映照',pos:['你的想法①','对方的想法②','你的想法③','对方的想法④','你的想法⑤','对方的想法⑥','未来发展','建议'],desc:['你已经意识到的态度','对方已经呈现的态度','你的潜在期待','对方的潜在期待','你更深层的真实想法','对方更深层的真实想法','双方互动的后续方向','改善局面的行动提示'],layout:[[2,1],[2,3],[3,1],[3,3],[4,1],[4,3],[5,2],[1,2]]}
     ];
-    let deck=[],selected=[],question='',mode='manual',revealed=false,shuffling=false,currentSpread=spreads[2],stackCursor=0,stackTimer=null,stackHolding=false;
+    let deck=[],selected=[],question='',mode='manual',revealed=false,shuffling=false,currentSpread=spreads[0],stackCursor=0,stackTimer=null,stackHolding=false;
     function positions(){return currentSpread.pos.map((name,i)=>[name,currentSpread.desc[i]])}
     function shuffleArray(list){const a=list.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a}
     function backMarkup(){return '<div class="card-back"></div>'}
